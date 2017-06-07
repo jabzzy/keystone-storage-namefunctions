@@ -40,7 +40,21 @@ exports.getFilename = function (file, callback) {
 	var self = this;
 	switch (self.options.whenExists) {
 		case 'overwrite':
-			self.options.generateFilename(file, 0, callback);
+			self.options.generateFilename(file, 0, function(err, filename) {
+				if (err) return callback(err);
+
+				self.fileExists(filename, function(err, result) {
+					if (err) return callback(err);
+
+					if (result === true) {
+						self.removeFile({ filename: filename }, function(err) {
+							if (err) return callback(err);
+						});
+					}
+
+					callback(null, filename);
+				});
+			});
 			break;
 		case 'error':
 			self.options.generateFilename(file, 0, function (err, filename) {
